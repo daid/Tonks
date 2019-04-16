@@ -1,0 +1,24 @@
+{
+    color: #CCFFCC
+    font: gui/theme/KenVector Bold.ttf
+    size: 30
+    [label] {
+    }
+    [button] {
+        size: 10
+    }
+    [button.background] {
+        image: gui/theme/pixel.png
+        color: #CCFFCC80
+    }
+    [progressbar] {
+        image: gui/theme/pixel.png
+        color: #CCFFCC80
+    }
+    [progressbar.background] {
+        image: gui/theme/pixel.png
+        color: #00000000
+    }
+    [image] {
+    }
+}

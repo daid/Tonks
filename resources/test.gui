@@ -1,0 +1,12 @@
+[TEST] {
+    stretch: true
+    type: label
+    caption: Hello
+    
+    [BUT] {
+        type: button
+        size: 50, 50
+        label: TEST
+        alignment: Left
+    }
+}
