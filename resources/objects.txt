@@ -1,0 +1,18 @@
+{
+    type: tank
+    [RED_TANK] {
+        body: tank/tankBody_red_outline.png
+        turret: turret/tankRed_barrel2_outline.png
+        flash: effect/shotThin.png
+    }
+    [BLUE_TANK] {
+        body: tank/tankBody_blue_outline.png
+        turret: turret/tankBlue_barrel1_outline.png
+        flash: effect/shotLarge.png
+    }
+    [GREEN_TANK] {
+        body: tank/tankBody_green_outline.png
+        turret: turret/tankGreen_barrel3_outline.png
+        flash: effect/shotLarge.png
+    }
+}

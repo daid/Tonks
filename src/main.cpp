@@ -11,6 +11,7 @@
 #include <sp2/graphics/scene/collisionrenderpass.h>
 #include <sp2/graphics/meshData.h>
 #include <sp2/graphics/textureManager.h>
+#include <sp2/graphics/textureAtlas.h>
 #include <sp2/collision/2d/circle.h>
 #include <sp2/collision/2d/box.h>
 #include <sp2/scene/scene.h>
@@ -18,6 +19,7 @@
 #include <sp2/scene/camera.h>
 #include <sp2/scene/tilemap.h>
 #include <sp2/io/keybinding.h>
+#include <sp2/io/keyValueTreeLoader.h>
 #include <sp2/updatable.h>
 
 #include "main.h"
@@ -44,6 +46,89 @@ sp::io::Keybinding up{"UP", "up"};
 sp::io::Keybinding down{"DOWN", "down"};
 sp::io::Keybinding left{"LEFT", "left"};
 sp::io::Keybinding right{"RIGHT", "right"};
+sp::io::Keybinding fire{"FIRE", "space"};
+
+sp::AtlasManager atlas{sp::Vector2i(2048, 2048), 1};
+
+sp::Vector2d setupTexture(sp::P<sp::Node> node, sp::string texture, bool turret_offset)
+{
+    sp::AtlasManager::Result result = atlas.get(texture);
+
+    sp::MeshData::Vertices vertices;
+    sp::MeshData::Indices indices{0,1,2,2,1,3};
+    vertices.reserve(4);
+        
+    sp::Vector2f size = result.rect.size * 16.0f;
+    sp::Vector2f uv0 = result.rect.position;
+    sp::Vector2f uv1 = uv0 + result.rect.size;
+    sp::Vector2f offset;
+    if (turret_offset)
+        offset.x = (size.x-size.y) * 0.8;
+    vertices.emplace_back(sp::Vector3f(offset.x-size.x, offset.y-size.y, 0.0f), sp::Vector2f(uv0.x, uv1.y));
+    vertices.emplace_back(sp::Vector3f(offset.x+size.x, offset.y-size.y, 0.0f), sp::Vector2f(uv1.x, uv1.y));
+    vertices.emplace_back(sp::Vector3f(offset.x-size.x, offset.y+size.y, 0.0f), sp::Vector2f(uv0.x, uv0.y));
+    vertices.emplace_back(sp::Vector3f(offset.x+size.x, offset.y+size.y, 0.0f), sp::Vector2f(uv1.x, uv0.y));
+
+    node->render_data.mesh = std::make_shared<sp::MeshData>(std::move(vertices), std::move(indices));
+    node->render_data.texture = result.texture;
+    return sp::Vector2d(result.rect.size.x * 32.0f, result.rect.size.y * 32.0f);
+}
+
+class TurretFlash : public sp::Node
+{
+public:
+    TurretFlash(sp::P<sp::Node> parent)
+    : sp::Node(parent)
+    {
+        render_data.type = sp::RenderData::Type::None;
+        render_data.shader = sp::Shader::get("internal:basic.shader");
+        render_data.order = RenderOrder::effects;
+    }
+    
+    void show()
+    {
+        render_data.type = sp::RenderData::Type::Additive;
+        delay = 5;
+    }
+    
+    virtual void onFixedUpdate()
+    {
+        if (delay)
+        {
+            delay--;
+            if (!delay)
+                render_data.type = sp::RenderData::Type::None;
+        }
+    }
+
+private:
+    int delay = 0;
+};
+
+class Bullet : public sp::Node
+{
+public:
+    Bullet(sp::P<sp::Node> parent)
+    : sp::Node(parent)
+    {
+        render_data.type = sp::RenderData::Type::Normal;
+        render_data.shader = sp::Shader::get("internal:basic.shader");
+        render_data.order = RenderOrder::projectile;
+        
+        setupTexture(this, "bullet/bulletDark2_outline.png", false);
+    }
+    
+    virtual void onFixedUpdate()
+    {
+        setPosition(getPosition2D() + sp::Vector2d(0.2, 0).rotate(getRotation2D()));
+        delay--;
+        if (!delay)
+            delete this;
+    }
+
+private:
+    int delay = 200;
+};
 
 class Turret : public sp::Node
 {
@@ -52,16 +137,25 @@ public:
     : sp::Node(parent)
     {
         render_data.type = sp::RenderData::Type::Normal;
-        render_data.mesh = sp::MeshData::createQuad(sp::Vector2f(0.5, 0.25));
         render_data.shader = sp::Shader::get("internal:basic.shader");
-        render_data.texture = sp::texture_manager.get("turrets/specialBarrel1_outline.png");
         render_data.order = getParent()->render_data.order + 1;
+        
+        flash = new TurretFlash(this);
     }
     
     virtual void onFixedUpdate()
     {
-        setRotation(-getParent()->getRotation2D());
+        if (fire.getDown())
+        {
+            flash->show();
+            Bullet* bullet = new Bullet(getScene()->getRoot());
+            bullet->setPosition(getGlobalPoint2D(sp::Vector2d(0.8, 0)));
+            bullet->setRotation(getGlobalRotation2D());
+        }
     }
+
+    sp::P<TurretFlash> flash;
+private:
 };
 
 
@@ -72,14 +166,10 @@ public:
     : sp::Node(parent)
     {
         render_data.type = sp::RenderData::Type::Normal;
-        render_data.mesh = sp::MeshData::createQuad(sp::Vector2f(1, 1));
         render_data.shader = sp::Shader::get("internal:basic.shader");
-        render_data.texture = sp::texture_manager.get("tankBody_dark_outline.png");
         render_data.order = RenderOrder::objects;
         
-        setCollisionShape(sp::collision::Box2D(1, 1));
-        
-        (new Turret(this))->setPosition(sp::Vector2d(0.2, 0));
+        turret = new Turret(this);
     }
     
     virtual void onFixedUpdate()
@@ -94,11 +184,11 @@ public:
         {
             double target_rotation = move_request.angle();
             double a = sp::angleDifference(current_rotation, target_rotation);
-            if (std::abs(a) > 90)//If we need to rotate more then 90deg, we best drive in reverse.
+            if (std::abs(a) > 100)//If we need to rotate more then 100deg, we best drive in reverse.
                 a = sp::angleDifference(180.0, a);
             
             engine_request = std::min(1.0, std::max(-1.0, forward.dot(move_request) * 1.5));
-            rotate_request = std::min(1.0, std::max(-1.0, a));
+            rotate_request = std::min(1.0, std::max(-1.0, a * 10.0 / rotation_speed));
             if (rotate_request && std::abs(engine_request) < 0.2)
                 engine_request = 0.2;
         }
@@ -108,11 +198,11 @@ public:
         setAngularVelocity(rotate_request * rotation_speed);
     }
 
+    sp::P<Turret> turret;
 private:
-    double engine_speed = 3.0;
+    double engine_speed = 5.0;
     double rotation_speed = 150.0;
 };
-
 
 int main(int argc, char** argv)
 {
@@ -148,7 +238,16 @@ int main(int argc, char** argv)
             tilemap->setTile(x, y, sp::random(0, 100) < 50 ? 0 : 10);
     tilemap->setPosition(sp::Vector2d(-10, -10));
     
-    new Tank(scene->getRoot());
+    for(auto& it : sp::io::KeyValueTreeLoader::load("objects.txt")->getFlattenNodesByIds())
+    {
+        Tank* tank = new Tank(scene->getRoot());
+        sp::Vector2d size = setupTexture(tank, it.second["body"], false);
+        tank->setCollisionShape(sp::collision::Box2D(size.x, size.y));
+
+        size = setupTexture(tank->turret, it.second["turret"], true);
+        tank->turret->flash->setPosition(sp::Vector2d(size.x, 0));
+        setupTexture(tank->turret->flash, it.second["flash"], true);
+    }
     
     engine->run();
 
