@@ -115,6 +115,10 @@ public:
         render_data.shader = sp::Shader::get("internal:basic.shader");
         render_data.order = RenderOrder::projectile;
         
+        sp::collision::Circle2D shape(0.15);
+        shape.type = sp::collision::Shape::Type::Sensor;
+        setCollisionShape(shape);
+        
         setupTexture(this, "bullet/bulletDark2_outline.png", false);
     }
     
@@ -201,7 +205,7 @@ public:
     sp::P<Turret> turret;
 private:
     double engine_speed = 5.0;
-    double rotation_speed = 150.0;
+    double rotation_speed = 250.0;
 };
 
 int main(int argc, char** argv)
