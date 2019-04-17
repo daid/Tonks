@@ -23,6 +23,10 @@
 #include <sp2/updatable.h>
 
 #include "main.h"
+#include "playerTank.h"
+
+Controls controls[2]{{0}, {1}};
+std::map<sp::string, std::map<sp::string, sp::string>> object_config;
 
 /** ideas
 enemies:
@@ -38,15 +42,9 @@ enemies:
 */
 
 
-
 sp::P<sp::Window> window;
 
 sp::io::Keybinding escape_key{"exit", "Escape"};
-sp::io::Keybinding up{"UP", "up"};
-sp::io::Keybinding down{"DOWN", "down"};
-sp::io::Keybinding left{"LEFT", "left"};
-sp::io::Keybinding right{"RIGHT", "right"};
-sp::io::Keybinding fire{"FIRE", "space"};
 
 sp::AtlasManager atlas{sp::Vector2i(2048, 2048), 1};
 
@@ -105,6 +103,33 @@ private:
     int delay = 0;
 };
 
+class Explosion : public sp::Node
+{
+public:
+    Explosion(sp::P<sp::Node> parent, sp::Vector2d position)
+    : sp::Node(parent)
+    {
+        render_data.type = sp::RenderData::Type::Normal;
+        render_data.shader = sp::Shader::get("internal:basic.shader");
+        render_data.order = RenderOrder::effects;
+
+        setPosition(position);
+
+        setupTexture(this, "effect/explosion1.png", false);
+    }
+    
+    virtual void onFixedUpdate()
+    {
+        idx++;
+        if (idx < 12)
+            setupTexture(this, "effect/explosion" + sp::string(idx / 2) + ".png", false);
+        else
+            delete this;
+    }
+private:
+    int idx = 1;
+};
+
 class Bullet : public sp::Node
 {
 public:
@@ -130,82 +155,14 @@ public:
             delete this;
     }
 
+    virtual void onCollision(sp::CollisionInfo& info)
+    {
+        new Explosion(getParent(), getPosition2D());
+    
+        delete this;
+    }
 private:
     int delay = 200;
-};
-
-class Turret : public sp::Node
-{
-public:
-    Turret(sp::P<sp::Node> parent)
-    : sp::Node(parent)
-    {
-        render_data.type = sp::RenderData::Type::Normal;
-        render_data.shader = sp::Shader::get("internal:basic.shader");
-        render_data.order = getParent()->render_data.order + 1;
-        
-        flash = new TurretFlash(this);
-    }
-    
-    virtual void onFixedUpdate()
-    {
-        if (fire.getDown())
-        {
-            flash->show();
-            Bullet* bullet = new Bullet(getScene()->getRoot());
-            bullet->setPosition(getGlobalPoint2D(sp::Vector2d(0.8, 0)));
-            bullet->setRotation(getGlobalRotation2D());
-        }
-    }
-
-    sp::P<TurretFlash> flash;
-private:
-};
-
-
-class Tank : public sp::Node
-{
-public:
-    Tank(sp::P<sp::Node> parent)
-    : sp::Node(parent)
-    {
-        render_data.type = sp::RenderData::Type::Normal;
-        render_data.shader = sp::Shader::get("internal:basic.shader");
-        render_data.order = RenderOrder::objects;
-        
-        turret = new Turret(this);
-    }
-    
-    virtual void onFixedUpdate()
-    {
-        sp::Vector2d move_request(right.getValue() - left.getValue(), up.getValue() - down.getValue());
-        double current_rotation = getRotation2D();
-        double engine_request = 0.0;
-        double rotate_request = 0.0;
-        sp::Vector2d forward = sp::Vector2d(1, 0).rotate(current_rotation);
-
-        if (move_request.x || move_request.y)
-        {
-            double target_rotation = move_request.angle();
-            double a = sp::angleDifference(current_rotation, target_rotation);
-            if (std::abs(a) > 100)//If we need to rotate more then 100deg, we best drive in reverse.
-                a = sp::angleDifference(180.0, a);
-            
-            engine_request = std::min(1.0, std::max(-1.0, forward.dot(move_request) * 1.5));
-            rotate_request = std::min(1.0, std::max(-1.0, a * 10.0 / rotation_speed));
-            if (rotate_request && std::abs(engine_request) < 0.2)
-                engine_request = 0.2;
-        }
-        sp::Vector2d velocity;
-        velocity += forward * engine_request * engine_speed;
-        setLinearVelocity(velocity);
-        setAngularVelocity(rotate_request * rotation_speed);
-    }
-
-    sp::P<Turret> turret;
-private:
-    double engine_speed = 5.0;
-    double rotation_speed = 250.0;
 };
 
 int main(int argc, char** argv)
@@ -242,16 +199,15 @@ int main(int argc, char** argv)
             tilemap->setTile(x, y, sp::random(0, 100) < 50 ? 0 : 10);
     tilemap->setPosition(sp::Vector2d(-10, -10));
     
-    for(auto& it : sp::io::KeyValueTreeLoader::load("objects.txt")->getFlattenNodesByIds())
-    {
-        Tank* tank = new Tank(scene->getRoot());
-        sp::Vector2d size = setupTexture(tank, it.second["body"], false);
-        tank->setCollisionShape(sp::collision::Box2D(size.x, size.y));
+    object_config = sp::io::KeyValueTreeLoader::load("objects.txt")->getFlattenNodesByIds();
 
-        size = setupTexture(tank->turret, it.second["turret"], true);
-        tank->turret->flash->setPosition(sp::Vector2d(size.x, 0));
-        setupTexture(tank->turret->flash, it.second["flash"], true);
-    }
+    PlayerTank* tank = new PlayerTank(scene->getRoot(), controls[0]);
+    sp::Vector2d size = setupTexture(tank, object_config["RED_TANK"]["body"], false);
+    tank->setCollisionShape(sp::collision::Box2D(size.x, size.y));
+
+    size = setupTexture(tank->turret, object_config["RED_TANK"]["turret"], true);
+    tank->turret->flash->setPosition(sp::Vector2d(size.x, 0));
+    setupTexture(tank->turret->flash, object_config["RED_TANK"]["flash"], true);
     
     engine->run();
 

@@ -1,6 +1,11 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include "controls.h"
+
+extern Controls controls[2];
+extern std::map<sp::string, std::map<sp::string, sp::string>> object_config;
+
 //Rendering orders
 class RenderOrder
 {
