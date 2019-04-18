@@ -17,8 +17,8 @@ Explosion::Explosion(sp::P<sp::Node> parent, sp::Vector2d position)
 void Explosion::onFixedUpdate()
 {
     idx++;
-    if (idx < 12)
-        setupTexture(this, "effect/explosion" + sp::string(idx / 2) + ".png", false);
+    if (idx < 5 * 3)
+        setupTexture(this, "effect/explosion" + sp::string(idx / 3 + 1) + ".png", false);
     else
         delete this;
 }

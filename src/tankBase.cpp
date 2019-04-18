@@ -1,6 +1,7 @@
 #include "tankBase.h"
 #include "turret.h"
 #include "main.h"
+#include "threadDecal.h"
 
 
 TankBase::TankBase(sp::P<sp::Node> parent)
@@ -45,4 +46,11 @@ void TankBase::onFixedUpdate()
         turret->fire();
 
     turret->setRotation(-current_rotation + turret_angle);
+    
+    sp::Vector2d new_position = getPosition2D();
+    if ((last_position - new_position).length() > 0.2)
+    {
+        new ThreadDecal(getParent(), new_position, getRotation2D());
+        last_position = new_position;
+    }
 }

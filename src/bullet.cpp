@@ -23,7 +23,7 @@ Bullet::Bullet(sp::P<sp::Node> parent)
 
 void Bullet::onFixedUpdate()
 {
-    setLinearVelocity(sp::Vector2d(20.0, 0).rotate(getRotation2D()));
+    setLinearVelocity(sp::Vector2d(10.0, 0).rotate(getRotation2D()));
     delay--;
     if (!delay)
         delete this;

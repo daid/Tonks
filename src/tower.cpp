@@ -1,6 +1,7 @@
 #include "tower.h"
 #include "turret.h"
 #include "main.h"
+#include "explosion.h"
 
 #include <sp2/random.h>
 
@@ -24,7 +25,10 @@ void Tower::takeDamage(int amount, sp::P<GameEntity> from)
 {
     hp -= amount;
     if (hp <= 0)
+    {
+        new Explosion(getParent(), getPosition2D());
         delete this;
+    }
 }
 
 void Tower::onFixedUpdate()
@@ -43,9 +47,15 @@ void Tower::fire()
     turret->fire();
 }
 
+double Tower::getTurretRotation()
+{
+    return turret->getGlobalRotation2D();
+}
 
 void Tower::onRegisterScriptBindings(sp::ScriptBindingClass& script_binding_class)
 {
+    GameEntity::onRegisterScriptBindings(script_binding_class);
     script_binding_class.bind("fire", &Tower::fire);
     script_binding_class.bind("rotate", &Tower::rotate);
+    script_binding_class.bind("getTurretRotation", &Tower::getTurretRotation);
 }

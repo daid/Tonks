@@ -3,8 +3,10 @@
 
 #include "controls.h"
 
+class PlayerTank;
 extern Controls controls[2];
 extern std::map<sp::string, std::map<sp::string, sp::string>> object_config;
+extern sp::P<PlayerTank> player_tanks[2];
 
 //Rendering orders
 class RenderOrder

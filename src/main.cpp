@@ -30,6 +30,7 @@
 
 Controls controls[2]{{0}, {1}};
 std::map<sp::string, std::map<sp::string, sp::string>> object_config;
+sp::P<PlayerTank> player_tanks[2];
 
 /** ideas
 enemies:
@@ -83,7 +84,8 @@ sp::P<sp::Node> createObject(sp::P<sp::Scene> scene, sp::string name)
     
     if (data["type"] == "playertank")
     {
-        PlayerTank* tank = new PlayerTank(scene->getRoot(), controls[0]);
+        int index = sp::stringutil::convert::toInt(data["player_index"]);
+        PlayerTank* tank = new PlayerTank(scene->getRoot(), controls[index]);
         sp::Vector2d size = setupTexture(tank, data["body"], false);
         tank->setCollisionShape(sp::collision::Box2D(size.x * 0.9, size.y * 0.9));
         tank->team = 0;
@@ -92,6 +94,7 @@ sp::P<sp::Node> createObject(sp::P<sp::Scene> scene, sp::string name)
         size = setupTexture(tank->turret, data["turret"], true);
         tank->turret->flash->setPosition(sp::Vector2d(size.x, 0));
         setupTexture(tank->turret->flash, data["flash"], true);
+        player_tanks[index] = tank;
         return tank;
     }
     if (data["type"] == "smallobject")
@@ -165,11 +168,12 @@ int main(int argc, char** argv)
     camera->setOrtographic(10.0);
     scene->setDefaultCamera(camera);
     
-    sp::Tilemap* tilemap = new sp::Tilemap(scene->getRoot(), "terrainTiles_default.png", 1.0, 1.0, 10, 4);
-    for(int x=0;x<20;x++)
-        for(int y=0;y<20;y++)
-            tilemap->setTile(x, y, sp::random(0, 100) < 50 ? 0 : 10);
+    sp::Tilemap* tilemap = new sp::Tilemap(scene->getRoot(), "towerDefense_tilesheet.png", 2.0, 2.0, 19, 12);
+    for(int x=0;x<10;x++)
+        for(int y=0;y<10;y++)
+            tilemap->setTile(x, y, sp::irandom(0, 100));
     tilemap->setPosition(sp::Vector2d(-10, -10));
+    tilemap->render_data.order = RenderOrder::tilemap;
     
     object_config = sp::io::KeyValueTreeLoader::load("objects.txt")->getFlattenNodesByIds();
 
@@ -180,7 +184,7 @@ int main(int argc, char** argv)
     createObject(scene, "BARICADE_WOOD");
     createObject(scene, "FENCE_RED");
     createObject(scene, "FENCE_YELLOW");
-    createObject(scene, "BASIC_TOWER");
+    createObject(scene, "SNIPE_TOWER");
     
     engine->run();
 

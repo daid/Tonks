@@ -20,6 +20,7 @@ public:
 protected:
     void rotate(float amount);
     void fire();
+    double getTurretRotation();
     
     virtual void onRegisterScriptBindings(sp::ScriptBindingClass& script_binding_class) override;
 private:

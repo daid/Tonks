@@ -12,6 +12,8 @@ public:
     virtual void takeDamage(int amount, sp::P<GameEntity> from) {}
     
     int team = -1;
+    
+    virtual void onRegisterScriptBindings(sp::ScriptBindingClass& script_binding_class) override;
 };
 
 #endif//GAME_ENTITY_H

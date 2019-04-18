@@ -10,7 +10,7 @@ public:
     
     virtual void onFixedUpdate();
 private:
-    int idx = 1;
+    int idx = 0;
 };
 
 #endif//EXPLOSION_H

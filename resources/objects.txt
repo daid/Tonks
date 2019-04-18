@@ -4,11 +4,13 @@
         body: tank/tankBody_red_outline.png
         turret: turret/tankRed_barrel2_outline.png
         flash: effect/shotThin.png
+        player_index: 0
     }
     [PLAYER_BLUE_TANK] {
         body: tank/tankBody_blue_outline.png
         turret: turret/tankBlue_barrel1_outline.png
         flash: effect/shotLarge.png
+        player_index: 1
     }
     [PLAYER_GREEN_TANK] {
         body: tank/tankBody_green_outline.png
@@ -46,9 +48,19 @@
 {
     type: tower
     base: objects/towerBase.png
-    [BASIC_TOWER] {
+    [STATIC_TOWER] {
         turret: turret/specialBarrel1_outline.png
         flash: effect/shotLarge.png
         ai: static
+    }
+    [8SHOT_TOWER] {
+        turret: turret/specialBarrel2_outline.png
+        flash: effect/shotLarge.png
+        ai: 8shot
+    }
+    [SNIPE_TOWER] {
+        turret: turret/specialBarrel3_outline.png
+        flash: effect/shotThin.png
+        ai: snipe
     }
 }
