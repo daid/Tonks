@@ -21,6 +21,7 @@
 #include <sp2/io/keybinding.h>
 #include <sp2/io/keyValueTreeLoader.h>
 #include <sp2/updatable.h>
+#include <json11/json11.hpp>
 
 #include "main.h"
 #include "playerTank.h"
@@ -174,6 +175,23 @@ int main(int argc, char** argv)
             tilemap->setTile(x, y, sp::irandom(0, 100));
     tilemap->setPosition(sp::Vector2d(-10, -10));
     tilemap->render_data.order = RenderOrder::tilemap;
+
+    sp::string err;
+    json11::Json map_json = json11::Json::parse(sp::io::ResourceProvider::get("level/1.json")->readAll(), err);
+    for(const auto& layer : map_json["layers"].array_items())
+    {
+        if (layer["type"].string_value() == "tilelayer")
+        {
+            sp::Vector2i size;
+            size.x = layer["width"].int_value();
+            size.y = layer["height"].int_value();
+
+            const json11::Json& tile_data_json = layer["data"];
+            for (int y = 0; y < size.y; y++)
+                for (int x = 0; x < size.x; x++)
+                    tilemap->setTile(x, y, tile_data_json[x + (size.y - 1 - y) * size.x].int_value() - 1);
+        }
+    }
     
     object_config = sp::io::KeyValueTreeLoader::load("objects.txt")->getFlattenNodesByIds();
 
