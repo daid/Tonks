@@ -26,6 +26,7 @@
 #include "playerTank.h"
 #include "turret.h"
 #include "turretFlash.h"
+#include "tower.h"
 
 Controls controls[2]{{0}, {1}};
 std::map<sp::string, std::map<sp::string, sp::string>> object_config;
@@ -93,7 +94,7 @@ sp::P<sp::Node> createObject(sp::P<sp::Scene> scene, sp::string name)
         setupTexture(tank->turret->flash, data["flash"], true);
         return tank;
     }
-    else if (data["type"] == "smallobject")
+    if (data["type"] == "smallobject")
     {
         GameEntity* entity = new GameEntity(scene->getRoot());
 
@@ -111,10 +112,23 @@ sp::P<sp::Node> createObject(sp::P<sp::Scene> scene, sp::string name)
         entity->team = -1;
         return entity;
     }
-    else
+    if (data["type"] == "tower")
     {
-        LOG(Error, "Unknown object type:", data["type"]);
+        Tower* tower = new Tower(scene->getRoot());
+        sp::Vector2d size = setupTexture(tower, data["base"], false);
+        sp::collision::Box2D shape(size.x * 0.9, size.y * 0.9);
+        shape.type = sp::collision::Shape::Type::Static;
+        tower->setCollisionShape(shape);
+        tower->team = 1;
+        tower->turret->team = tower->team;
+        tower->setAI(data["ai"]);
+
+        size = setupTexture(tower->turret, data["turret"], true);
+        tower->turret->flash->setPosition(sp::Vector2d(size.x, 0));
+        setupTexture(tower->turret->flash, data["flash"], true);
+        return tower;
     }
+    LOG(Error, "Unknown object type:", data["type"]);
     return nullptr;
 }
 
@@ -132,14 +146,18 @@ int main(int argc, char** argv)
     //Create a window to render on, and our engine.
     window = new sp::Window(4.0/3.0);
     window->setPosition(sp::Vector2f(0.5, 0.5));
-    //window->setFullScreen(true);
+#ifndef DEBUG
+    window->setFullScreen(true);
+#endif
 
     sp::gui::Theme::loadTheme("default", "gui/theme/basic.theme.txt");
     new sp::gui::Scene(sp::Vector2d(640, 480), sp::gui::Scene::Direction::Horizontal);
 
     sp::P<sp::SceneGraphicsLayer> scene_layer = new sp::SceneGraphicsLayer(1);
     scene_layer->addRenderPass(new sp::BasicNodeRenderPass());
+#ifdef DEBUG
     scene_layer->addRenderPass(new sp::CollisionRenderPass());
+#endif
     window->addLayer(scene_layer);
 
     sp::Scene* scene = new sp::Scene("TEST");
@@ -162,6 +180,7 @@ int main(int argc, char** argv)
     createObject(scene, "BARICADE_WOOD");
     createObject(scene, "FENCE_RED");
     createObject(scene, "FENCE_YELLOW");
+    createObject(scene, "BASIC_TOWER");
     
     engine->run();
 

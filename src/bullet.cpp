@@ -14,6 +14,8 @@ Bullet::Bullet(sp::P<sp::Node> parent)
     
     sp::collision::Circle2D shape(0.2);
     shape.type = sp::collision::Shape::Type::Sensor;
+    shape.setFilterCategory(2);
+    shape.setMaskFilterCategory(2);
     setCollisionShape(shape);
     
     setupTexture(this, "bullet/bulletDark2_outline.png", false);
@@ -31,6 +33,9 @@ void Bullet::onCollision(sp::CollisionInfo& info)
 {
     if (canHurt(info.other))
     {
+        sp::P<GameEntity> other = info.other;
+        if (other)
+            other->takeDamage(1, this);
         new Explosion(getParent(), getPosition2D());
 
         delete this;

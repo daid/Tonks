@@ -1,18 +1,54 @@
 {
-    type: tank
-    [RED_TANK] {
+    type: playertank
+    [PLAYER_RED_TANK] {
         body: tank/tankBody_red_outline.png
         turret: turret/tankRed_barrel2_outline.png
         flash: effect/shotThin.png
     }
-    [BLUE_TANK] {
+    [PLAYER_BLUE_TANK] {
         body: tank/tankBody_blue_outline.png
         turret: turret/tankBlue_barrel1_outline.png
         flash: effect/shotLarge.png
     }
-    [GREEN_TANK] {
+    [PLAYER_GREEN_TANK] {
         body: tank/tankBody_green_outline.png
         turret: turret/tankGreen_barrel3_outline.png
         flash: effect/shotLarge.png
+    }
+}
+{
+    type: smallobject
+    [METAL_CRATE] {
+        image: objects/crateMetal.png
+        density: 20
+    }
+    [WOOD_CRATE] {
+        image: objects/crateWood.png
+        density: 10
+    }
+    [BARICADE_METAL] {
+        image: objects/barricadeMetal.png
+        density: 20
+    }
+    [BARICADE_WOOD] {
+        image: objects/barricadeWood.png
+        density: 15
+    }
+    [FENCE_RED] {
+        image: objects/fenceRed.png
+        density: 5
+    }
+    [FENCE_YELLOW] {
+        image: objects/fenceYellow.png
+        density: 5
+    }
+}
+{
+    type: tower
+    base: objects/towerBase.png
+    [BASIC_TOWER] {
+        turret: turret/specialBarrel1_outline.png
+        flash: effect/shotLarge.png
+        ai: static
     }
 }
