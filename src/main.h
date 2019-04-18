@@ -20,4 +20,6 @@ public:
     static constexpr int flying_objects = 20;
 };
 
+sp::Vector2d setupTexture(sp::P<sp::Node> node, sp::string texture, bool turret_offset);
+
 #endif//MAIN_H

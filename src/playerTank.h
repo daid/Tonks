@@ -9,6 +9,7 @@ class PlayerTank : public TankBase
 public:
     PlayerTank(sp::P<sp::Node> parent, Controls& controls);
 
+    virtual Input getInput() override;
 private:
     Controls& controls;
 };

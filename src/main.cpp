@@ -24,6 +24,8 @@
 
 #include "main.h"
 #include "playerTank.h"
+#include "turret.h"
+#include "turretFlash.h"
 
 Controls controls[2]{{0}, {1}};
 std::map<sp::string, std::map<sp::string, sp::string>> object_config;
@@ -51,6 +53,8 @@ sp::AtlasManager atlas{sp::Vector2i(2048, 2048), 1};
 sp::Vector2d setupTexture(sp::P<sp::Node> node, sp::string texture, bool turret_offset)
 {
     sp::AtlasManager::Result result = atlas.get(texture);
+    if (result.rect.size.x < 0)
+        LOG(Warning, "Failed to find", texture);
 
     sp::MeshData::Vertices vertices;
     sp::MeshData::Indices indices{0,1,2,2,1,3};
@@ -72,98 +76,48 @@ sp::Vector2d setupTexture(sp::P<sp::Node> node, sp::string texture, bool turret_
     return sp::Vector2d(result.rect.size.x * 32.0f, result.rect.size.y * 32.0f);
 }
 
-class TurretFlash : public sp::Node
+sp::P<sp::Node> createObject(sp::P<sp::Scene> scene, sp::string name)
 {
-public:
-    TurretFlash(sp::P<sp::Node> parent)
-    : sp::Node(parent)
-    {
-        render_data.type = sp::RenderData::Type::None;
-        render_data.shader = sp::Shader::get("internal:basic.shader");
-        render_data.order = RenderOrder::effects;
-    }
+    std::map<sp::string, sp::string> data = object_config[name];
     
-    void show()
+    if (data["type"] == "playertank")
     {
-        render_data.type = sp::RenderData::Type::Additive;
-        delay = 5;
+        PlayerTank* tank = new PlayerTank(scene->getRoot(), controls[0]);
+        sp::Vector2d size = setupTexture(tank, data["body"], false);
+        tank->setCollisionShape(sp::collision::Box2D(size.x * 0.9, size.y * 0.9));
+        tank->team = 0;
+        tank->turret->team = tank->team;
+
+        size = setupTexture(tank->turret, data["turret"], true);
+        tank->turret->flash->setPosition(sp::Vector2d(size.x, 0));
+        setupTexture(tank->turret->flash, data["flash"], true);
+        return tank;
     }
-    
-    virtual void onFixedUpdate()
+    else if (data["type"] == "smallobject")
     {
-        if (delay)
-        {
-            delay--;
-            if (!delay)
-                render_data.type = sp::RenderData::Type::None;
-        }
-    }
+        GameEntity* entity = new GameEntity(scene->getRoot());
 
-private:
-    int delay = 0;
-};
-
-class Explosion : public sp::Node
-{
-public:
-    Explosion(sp::P<sp::Node> parent, sp::Vector2d position)
-    : sp::Node(parent)
-    {
-        render_data.type = sp::RenderData::Type::Normal;
-        render_data.shader = sp::Shader::get("internal:basic.shader");
-        render_data.order = RenderOrder::effects;
-
-        setPosition(position);
-
-        setupTexture(this, "effect/explosion1.png", false);
-    }
-    
-    virtual void onFixedUpdate()
-    {
-        idx++;
-        if (idx < 12)
-            setupTexture(this, "effect/explosion" + sp::string(idx / 2) + ".png", false);
-        else
-            delete this;
-    }
-private:
-    int idx = 1;
-};
-
-class Bullet : public sp::Node
-{
-public:
-    Bullet(sp::P<sp::Node> parent)
-    : sp::Node(parent)
-    {
-        render_data.type = sp::RenderData::Type::Normal;
-        render_data.shader = sp::Shader::get("internal:basic.shader");
-        render_data.order = RenderOrder::projectile;
+        entity->render_data.type = sp::RenderData::Type::Normal;
+        entity->render_data.shader = sp::Shader::get("internal:basic.shader");
+        entity->render_data.order = RenderOrder::objects;
+        sp::Vector2d size = setupTexture(entity, data["image"], false);
         
-        sp::collision::Circle2D shape(0.15);
-        shape.type = sp::collision::Shape::Type::Sensor;
-        setCollisionShape(shape);
+        sp::collision::Box2D shape(size.x, size.y);
+        shape.linear_damping = 10.0;
+        shape.angular_damping = 10.0;
+        shape.density = sp::stringutil::convert::toFloat(data["density"]);
+        entity->setCollisionShape(shape);
         
-        setupTexture(this, "bullet/bulletDark2_outline.png", false);
+        entity->team = -1;
+        return entity;
     }
-    
-    virtual void onFixedUpdate()
+    else
     {
-        setPosition(getPosition2D() + sp::Vector2d(0.2, 0).rotate(getRotation2D()));
-        delay--;
-        if (!delay)
-            delete this;
+        LOG(Error, "Unknown object type:", data["type"]);
     }
+    return nullptr;
+}
 
-    virtual void onCollision(sp::CollisionInfo& info)
-    {
-        new Explosion(getParent(), getPosition2D());
-    
-        delete this;
-    }
-private:
-    int delay = 200;
-};
 
 int main(int argc, char** argv)
 {
@@ -201,13 +155,13 @@ int main(int argc, char** argv)
     
     object_config = sp::io::KeyValueTreeLoader::load("objects.txt")->getFlattenNodesByIds();
 
-    PlayerTank* tank = new PlayerTank(scene->getRoot(), controls[0]);
-    sp::Vector2d size = setupTexture(tank, object_config["RED_TANK"]["body"], false);
-    tank->setCollisionShape(sp::collision::Box2D(size.x, size.y));
-
-    size = setupTexture(tank->turret, object_config["RED_TANK"]["turret"], true);
-    tank->turret->flash->setPosition(sp::Vector2d(size.x, 0));
-    setupTexture(tank->turret->flash, object_config["RED_TANK"]["flash"], true);
+    createObject(scene, "PLAYER_RED_TANK");
+    createObject(scene, "METAL_CRATE");
+    createObject(scene, "WOOD_CRATE");
+    createObject(scene, "BARICADE_METAL");
+    createObject(scene, "BARICADE_WOOD");
+    createObject(scene, "FENCE_RED");
+    createObject(scene, "FENCE_YELLOW");
     
     engine->run();
 
