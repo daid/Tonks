@@ -113,6 +113,8 @@ sp::P<sp::Node> createObject(sp::P<sp::Scene> scene, sp::string name)
         shape.linear_damping = 10.0;
         shape.angular_damping = 10.0;
         shape.density = sp::stringutil::convert::toFloat(data["density"]);
+        if (sp::stringutil::convert::toBool(data["mask_projectiles"]))
+            shape.setMaskFilterCategory(CollisionCategory::projectile);
         entity->setCollisionShape(shape);
         
         entity->team = -1;

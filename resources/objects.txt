@@ -39,10 +39,12 @@
     [FENCE_RED] {
         image: objects/fenceRed.png
         density: 5
+        mask_projectiles: 1
     }
     [FENCE_YELLOW] {
         image: objects/fenceYellow.png
         density: 5
+        mask_projectiles: 1
     }
 }
 {
