@@ -35,7 +35,7 @@ void TankBase::onFixedUpdate()
         if (rotate_request && std::abs(engine_request) < 0.2)
             engine_request = 0.2;
     }
-    sp::Vector2d velocity;
+    sp::Vector2d velocity = getLinearVelocity2D() * 0.1;
     velocity += forward * engine_request * engine_speed;
     setLinearVelocity(velocity);
     setAngularVelocity(rotate_request * rotation_speed);

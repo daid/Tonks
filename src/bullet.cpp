@@ -14,8 +14,8 @@ Bullet::Bullet(sp::P<sp::Node> parent)
     
     sp::collision::Circle2D shape(0.2);
     shape.type = sp::collision::Shape::Type::Sensor;
-    shape.setFilterCategory(2);
-    shape.setMaskFilterCategory(2);
+    shape.setFilterCategory(CollisionCategory::projectile);
+    shape.setMaskFilterCategory(CollisionCategory::projectile);
     setCollisionShape(shape);
     
     setupTexture(this, "bullet/bulletDark2_outline.png", false);

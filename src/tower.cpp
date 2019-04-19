@@ -34,7 +34,7 @@ void Tower::takeDamage(int amount, sp::P<GameEntity> from)
 void Tower::onFixedUpdate()
 {
     script.update();
-    turret->setRotation(-getRotation2D() + turret_angle);
+    turret->setRotation(turret_angle);
 }
 
 void Tower::rotate(float amount)

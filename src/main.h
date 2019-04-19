@@ -21,6 +21,13 @@ public:
     static constexpr int trees = 15;
     static constexpr int flying_objects = 20;
 };
+class CollisionCategory
+{
+public:
+    static constexpr int other = 0;
+    static constexpr int player = 1;
+    static constexpr int projectile = 2;
+};
 
 sp::Vector2d setupTexture(sp::P<sp::Node> node, sp::string texture, bool turret_offset);
 

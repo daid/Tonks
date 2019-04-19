@@ -88,7 +88,9 @@ sp::P<sp::Node> createObject(sp::P<sp::Scene> scene, sp::string name)
         int index = sp::stringutil::convert::toInt(data["player_index"]);
         PlayerTank* tank = new PlayerTank(scene->getRoot(), controls[index]);
         sp::Vector2d size = setupTexture(tank, data["body"], false);
-        tank->setCollisionShape(sp::collision::Box2D(size.x * 0.9, size.y * 0.9));
+        sp::collision::Box2D shape(size.x * 0.9, size.y * 0.9);
+        shape.setFilterCategory(CollisionCategory::player);
+        tank->setCollisionShape(shape);
         tank->team = 0;
         tank->turret->team = tank->team;
 
@@ -116,6 +118,22 @@ sp::P<sp::Node> createObject(sp::P<sp::Scene> scene, sp::string name)
         entity->team = -1;
         return entity;
     }
+    if (data["type"] == "tree")
+    {
+        GameEntity* entity = new GameEntity(scene->getRoot());
+
+        entity->render_data.type = sp::RenderData::Type::Normal;
+        entity->render_data.shader = sp::Shader::get("internal:basic.shader");
+        entity->render_data.order = RenderOrder::trees;
+        sp::Vector2d size = setupTexture(entity, data["image"], false);
+        
+        sp::collision::Circle2D shape(size.x / 10.0);
+        shape.type = sp::collision::Shape::Type::Static;
+        entity->setCollisionShape(shape);
+        
+        entity->team = -1;
+        return entity;
+    }
     if (data["type"] == "tower")
     {
         Tower* tower = new Tower(scene->getRoot());
@@ -135,6 +153,156 @@ sp::P<sp::Node> createObject(sp::P<sp::Scene> scene, sp::string name)
     LOG(Error, "Unknown object type:", data["type"]);
     return nullptr;
 }
+
+class GameScene : public sp::Scene
+{
+public:
+    GameScene()
+    : sp::Scene("GAME")
+    {
+    }
+    
+    void loadLevel(sp::string name)
+    {
+        for(sp::Node* n : getRoot()->getChildren())
+            delete n;
+        
+        sp::Camera* camera = new sp::Camera(getRoot());
+        camera->setOrtographic(10.0);
+        setDefaultCamera(camera);
+        
+        sp::Tilemap* tilemap = new sp::Tilemap(getRoot(), "towerDefense_tilesheet.png", 2.0, 2.0, 19, 12);
+        tilemap->render_data.order = RenderOrder::tilemap;
+
+        sp::string err;
+        json11::Json map_json = json11::Json::parse(sp::io::ResourceProvider::get("level/" + name + ".json")->readAll(), err);
+        map_size.x = map_json["width"].int_value();
+        map_size.y = map_json["height"].int_value();
+        for(const auto& layer : map_json["layers"].array_items())
+        {
+            if (layer["type"].string_value() == "tilelayer")
+            {
+                const json11::Json& tile_data_json = layer["data"];
+                for (int y = 0; y < map_size.y; y++)
+                    for (int x = 0; x < map_size.x; x++)
+                        tilemap->setTile(x, y, tile_data_json[x + (map_size.y - 1 - y) * map_size.x].int_value() - 1);
+            }
+            if (layer["type"].string_value() == "objectgroup")
+            {
+                for(const auto& json_object : layer["objects"].array_items())
+                {
+                    ObjectInfo info;
+                    info.position = sp::Vector2d(json_object["x"].number_value() / 32.0, map_size.y * 2.0 - json_object["y"].number_value() / 32.0);
+                    info.rotation = sp::stringutil::convert::toFloat(json_object["type"].string_value());
+                    info.name = json_object["name"].string_value();
+                    objects.push_back(info);
+                }
+            }
+            std::sort(objects.begin(), objects.end(), [](const ObjectInfo& a, const ObjectInfo& b)
+            {
+                return a.position.y < b.position.y;
+            });
+        }
+        
+        {
+            sp::P<sp::Node> node = new sp::Node(getRoot());
+            sp::collision::Box2D shape(2.0, 22.0, -11.0, 0);
+            shape.type = sp::collision::Shape::Type::Kinematic;
+            node->setCollisionShape(shape);
+            player_borders.add(node);
+        }
+        {
+            sp::P<sp::Node> node = new sp::Node(getRoot());
+            sp::collision::Box2D shape(2.0, 22.0, 11.0, 0);
+            shape.type = sp::collision::Shape::Type::Kinematic;
+            node->setCollisionShape(shape);
+            player_borders.add(node);
+        }
+        {
+            sp::P<sp::Node> node = new sp::Node(getRoot());
+            sp::collision::Box2D shape(22.0, 5.0, 0.0, -12.5);
+            shape.type = sp::collision::Shape::Type::Kinematic;
+            shape.setMaskFilterCategory(CollisionCategory::other);
+            node->setCollisionShape(shape);
+            player_borders.add(node);
+        }
+        {
+            sp::P<sp::Node> node = new sp::Node(getRoot());
+            sp::collision::Box2D shape(22.0, 5.0, 0.0, 12.5);
+            shape.type = sp::collision::Shape::Type::Kinematic;
+            shape.setMaskFilterCategory(CollisionCategory::other);
+            node->setCollisionShape(shape);
+            player_borders.add(node);
+        }
+    }
+
+    virtual void onUpdate(float delta)
+    {
+        sp::Vector2d camera_position = getCamera()->getPosition2D();
+        camera_position.x = 10.0;
+        camera_position.y = std::max(camera_position.y, 10.0);
+        for(int n=0; n<2; n++)
+        {
+            if (player_tanks[n])
+                camera_position.y = std::max(camera_position.y, std::min(camera_position.y + 0.1, player_tanks[n]->getPosition2D().y + 2.0));
+        }
+        if (scroll_lock)
+        {
+            camera_position.y = std::min(scroll_lock - 10.0, camera_position.y);
+            bool keep_lock = false;
+            for(sp::Node* n : getRoot()->getChildren())
+            {
+                sp::P<GameEntity> ge = sp::P<sp::Node>(n);
+                if (ge && ge->team > 0)
+                {
+                    keep_lock = true;
+                    break;
+                }
+            }
+            if (!keep_lock)
+                scroll_lock = 0.0;
+        }
+        for(int n=0; n<2; n++)
+            if (player_tanks[n] && player_tanks[n]->getPosition2D().y < camera_position.y - 10)
+                    player_tanks[n]->setPosition(sp::Vector2d(player_tanks[n]->getPosition2D().x, camera_position.y - 10));
+        getCamera()->setPosition(camera_position);
+        
+        while(objects.size() > 0 && objects.front().position.y < camera_position.y + 12.0)
+        {
+            if (objects.front().name == "SCROLL_LOCK")
+            {
+                scroll_lock = objects.front().position.y;
+            }
+            else
+            {
+                sp::P<sp::Node> node = createObject(this, objects.front().name);
+                if (node)
+                {
+                    node->setPosition(objects.front().position);
+                    node->setRotation(objects.front().rotation);
+                }
+            }
+            objects.erase(objects.begin());
+        }
+        for(auto node : player_borders)
+        {
+            node->setPosition(camera_position);
+        }
+    }
+private:
+    class ObjectInfo
+    {
+    public:
+        sp::string name;
+        sp::Vector2d position;
+        double rotation;
+    };
+    
+    double scroll_lock = 0.0;
+    sp::Vector2i map_size;
+    std::vector<ObjectInfo> objects;
+    sp::PList<sp::Node> player_borders;
+};
 
 
 int main(int argc, char** argv)
@@ -164,46 +332,11 @@ int main(int argc, char** argv)
 #endif
     window->addLayer(scene_layer);
 
-    sp::Scene* scene = new sp::Scene("TEST");
-    sp::Camera* camera = new sp::Camera(scene->getRoot());
-    camera->setOrtographic(10.0);
-    scene->setDefaultCamera(camera);
-    
-    sp::Tilemap* tilemap = new sp::Tilemap(scene->getRoot(), "towerDefense_tilesheet.png", 2.0, 2.0, 19, 12);
-    for(int x=0;x<10;x++)
-        for(int y=0;y<10;y++)
-            tilemap->setTile(x, y, sp::irandom(0, 100));
-    tilemap->setPosition(sp::Vector2d(-10, -10));
-    tilemap->render_data.order = RenderOrder::tilemap;
-
-    sp::string err;
-    json11::Json map_json = json11::Json::parse(sp::io::ResourceProvider::get("level/1.json")->readAll(), err);
-    for(const auto& layer : map_json["layers"].array_items())
-    {
-        if (layer["type"].string_value() == "tilelayer")
-        {
-            sp::Vector2i size;
-            size.x = layer["width"].int_value();
-            size.y = layer["height"].int_value();
-
-            const json11::Json& tile_data_json = layer["data"];
-            for (int y = 0; y < size.y; y++)
-                for (int x = 0; x < size.x; x++)
-                    tilemap->setTile(x, y, tile_data_json[x + (size.y - 1 - y) * size.x].int_value() - 1);
-        }
-    }
-    
     object_config = sp::io::KeyValueTreeLoader::load("objects.txt")->getFlattenNodesByIds();
 
-    createObject(scene, "PLAYER_RED_TANK");
-    createObject(scene, "METAL_CRATE");
-    createObject(scene, "WOOD_CRATE");
-    createObject(scene, "BARICADE_METAL");
-    createObject(scene, "BARICADE_WOOD");
-    createObject(scene, "FENCE_RED");
-    createObject(scene, "FENCE_YELLOW");
-    createObject(scene, "SNIPE_TOWER");
-    
+    GameScene* scene = new GameScene();
+    scene->loadLevel("1");
+
     engine->run();
 
     return 0;

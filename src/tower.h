@@ -25,7 +25,7 @@ protected:
     virtual void onRegisterScriptBindings(sp::ScriptBindingClass& script_binding_class) override;
 private:
     AIScript script;
-    double turret_angle = 90;
+    double turret_angle = 0;
     int hp = 10;
 };
 

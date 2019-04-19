@@ -64,3 +64,12 @@
         ai: snipe
     }
 }
+{
+    type: tree
+    [TREE_LARGE] {
+        image: objects/treeGreen_large.png
+    }
+    [TREE] {
+        image: objects/treeGreen_small.png
+    }
+}

@@ -13,7 +13,7 @@ public:
 
     virtual void onCollision(sp::CollisionInfo& info) override;
 private:
-    int delay = 200;
+    int delay = 120;
 };
 
 
