@@ -1,32 +1,31 @@
-#ifndef TOWER_H
-#define TOWER_H
+#ifndef AI_TANK_H
+#define AI_TANK_H
 
-#include "gameEntity.h"
+#include "tankBase.h"
 #include "aiScript.h"
 
-
-class Turret;
-class Tower : public GameEntity
+class AITank : public TankBase
 {
 public:
-    Tower(sp::P<sp::Node> parent);
+    AITank(sp::P<sp::Node> parent);
+
+    virtual Input getInput() override;
     
-    virtual void onFixedUpdate() override;
     void setAI(sp::string script);
 
     virtual void takeDamage(int amount, sp::P<GameEntity> from) override;
     
-    sp::P<Turret> turret;
-    int hp = 10;
+    int hp = 15;
 protected:
+    void move(sp::Vector2d amount);
     void rotate(float amount);
     void fire();
     double getTurretRotation();
     
     virtual void onRegisterScriptBindings(sp::ScriptBindingClass& script_binding_class) override;
 private:
+    Input input;
     AIScript script;
-    double turret_angle = 0;
 };
 
-#endif//TOWER_H
+#endif//PLAYER_TANK_H

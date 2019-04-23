@@ -13,6 +13,8 @@ public:
     virtual void onFixedUpdate() override;
 
     sp::P<Turret> turret;
+    double engine_speed = 5.0;
+    double rotation_speed = 250.0;
 protected:
     class Input
     {
@@ -25,8 +27,6 @@ protected:
     virtual Input getInput() = 0;
 private:
     double turret_angle = 90;
-    double engine_speed = 5.0;
-    double rotation_speed = 250.0;
     
     sp::Vector2d last_position;
 };

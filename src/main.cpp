@@ -24,6 +24,7 @@
 #include <json11/json11.hpp>
 
 #include "main.h"
+#include "aiTank.h"
 #include "playerTank.h"
 #include "turret.h"
 #include "turretFlash.h"
@@ -93,11 +94,32 @@ sp::P<sp::Node> createObject(sp::P<sp::Scene> scene, sp::string name)
         tank->setCollisionShape(shape);
         tank->team = 0;
         tank->turret->team = tank->team;
+        tank->engine_speed = sp::stringutil::convert::toFloat(data["engine_speed"]);
+        tank->rotation_speed = sp::stringutil::convert::toFloat(data["rotation_speed"]);
 
         size = setupTexture(tank->turret, data["turret"], true);
         tank->turret->flash->setPosition(sp::Vector2d(size.x, 0));
         setupTexture(tank->turret->flash, data["flash"], true);
         player_tanks[index] = tank;
+        return tank;
+    }
+    if (data["type"] == "tank")
+    {
+        AITank* tank = new AITank(scene->getRoot());
+        sp::Vector2d size = setupTexture(tank, data["body"], false);
+        sp::collision::Box2D shape(size.x * 0.9, size.y * 0.9);
+        shape.setFilterCategory(CollisionCategory::other);
+        tank->setCollisionShape(shape);
+        tank->team = 1;
+        tank->turret->team = tank->team;
+        tank->setAI(data["ai"]);
+        tank->engine_speed = sp::stringutil::convert::toFloat(data["engine_speed"]);
+        tank->rotation_speed = sp::stringutil::convert::toFloat(data["rotation_speed"]);
+        tank->hp = sp::stringutil::convert::toInt(data["hp"]);
+
+        size = setupTexture(tank->turret, data["turret"], true);
+        tank->turret->flash->setPosition(sp::Vector2d(size.x, 0));
+        setupTexture(tank->turret->flash, data["flash"], true);
         return tank;
     }
     if (data["type"] == "smallobject")
@@ -146,6 +168,7 @@ sp::P<sp::Node> createObject(sp::P<sp::Scene> scene, sp::string name)
         tower->team = 1;
         tower->turret->team = tower->team;
         tower->setAI(data["ai"]);
+        tower->hp = sp::stringutil::convert::toInt(data["hp"]);
 
         size = setupTexture(tower->turret, data["turret"], true);
         tower->turret->flash->setPosition(sp::Vector2d(size.x, 0));

@@ -1,20 +1,22 @@
 function getAngleDiffTowardsPlayer(index)
     local player = getPlayer(index)
     if player == nil or not player.valid then
-        return nil
+        return nil, nil
     end
     local angle = (player.getPosition() - self.getPosition()):angle()
     local diff = angle-self.getTurretRotation()
     if diff > 180 then diff = diff - 360 end
     if diff < -180 then diff = diff + 360 end
-    return diff
+    local score = math.abs(diff) + (player.getPosition() - self.getPosition()):length() * 5.0
+    return diff, score
 end
 
 function update()
-    local diff0 = getAngleDiffTowardsPlayer(0)
-    local diff1 = getAngleDiffTowardsPlayer(1)
+    local diff0, score0 = getAngleDiffTowardsPlayer(0)
+    local diff1, score1 = getAngleDiffTowardsPlayer(1)
     local diff = diff0
-    if diff == nil or math.abs(diff) > math.abs(diff1) then diff = diff1 end
+    print(score0, score1)
+    if diff == nil or score0 > score1 then diff = diff1 end
     if diff == nil then return end
     
     if diff > 180 then diff = diff - 360 end

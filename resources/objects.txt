@@ -1,5 +1,7 @@
 {
     type: playertank
+    engine_speed: 5.0
+    rotation_speed: 250.0
     [PLAYER_RED_TANK] {
         body: tank/tankBody_red_outline.png
         turret: turret/tankRed_barrel2_outline.png
@@ -50,6 +52,7 @@
 {
     type: tower
     base: objects/towerBase.png
+    hp: 5
     [STATIC_TOWER] {
         turret: turret/specialBarrel1_outline.png
         flash: effect/shotLarge.png
@@ -73,5 +76,17 @@
     }
     [TREE] {
         image: objects/treeGreen_small.png
+    }
+}
+{
+    type: tank
+    hp: 10
+    engine_speed: 2.0
+    rotation_speed: 150.0
+    [SEEK_TANK] {
+        body: tank/tankBody_sand_outline.png
+        turret: turret/tankSand_barrel2_outline.png
+        flash: effect/shotThin.png
+        ai: seek
     }
 }
