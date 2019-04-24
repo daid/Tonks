@@ -9,7 +9,7 @@
 #include <sp2/graphics/scene/graphicslayer.h>
 #include <sp2/graphics/scene/basicnoderenderpass.h>
 #include <sp2/graphics/scene/collisionrenderpass.h>
-#include <sp2/graphics/meshData.h>
+#include <sp2/graphics/meshdata.h>
 #include <sp2/graphics/textureManager.h>
 #include <sp2/graphics/textureAtlas.h>
 #include <sp2/collision/2d/circle.h>
