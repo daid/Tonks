@@ -189,8 +189,8 @@ public:
     
     void loadLevel(sp::string name)
     {
-        for(sp::Node* n : getRoot()->getChildren())
-            delete n;
+        for(sp::P<sp::Node> n : getRoot()->getChildren())
+            n.destroy();
         
         sp::Camera* camera = new sp::Camera(getRoot());
         camera->setOrtographic(10.0);
@@ -275,9 +275,8 @@ public:
         {
             camera_position.y = std::min(scroll_lock - 10.0, camera_position.y);
             bool keep_lock = false;
-            for(sp::Node* n : getRoot()->getChildren())
+            for(sp::P<GameEntity> ge : getRoot()->getChildren())
             {
-                sp::P<GameEntity> ge = sp::P<sp::Node>(n);
                 if (ge && ge->team > 0)
                 {
                     keep_lock = true;
