@@ -16,10 +16,10 @@ Controls::Controls(int index)
 {
     if (index == 0)
     {
-        up.setKeys("up", "keypad 8");
-        down.setKeys("down", "keypad 2");
-        left.setKeys("left", "keypad 4");
-        right.setKeys("right", "keypad 6");
+        up.setKeys({"up", "keypad 8"});
+        down.setKeys({"down", "keypad 2"});
+        left.setKeys({"left", "keypad 4"});
+        right.setKeys({"right", "keypad 6"});
         
         turn_turret_left.setKey("space");
         fire.setKey("z");
