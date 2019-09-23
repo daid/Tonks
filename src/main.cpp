@@ -261,7 +261,7 @@ public:
         }
     }
 
-    virtual void onUpdate(float delta)
+    virtual void onUpdate(float delta) override
     {
         sp::Vector2d camera_position = getCamera()->getPosition2D();
         camera_position.x = 10.0;
