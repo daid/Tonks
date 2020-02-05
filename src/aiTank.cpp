@@ -32,7 +32,7 @@ void AITank::takeDamage(int amount, sp::P<GameEntity> from)
     }
 }
 
-void AITank::move(sp::Vector2d amount)
+void AITank::move(const sp::Vector2d& amount)
 {
     input.move_request = amount;
 }

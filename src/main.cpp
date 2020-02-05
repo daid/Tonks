@@ -21,6 +21,7 @@
 #include <sp2/io/keybinding.h>
 #include <sp2/io/keyValueTreeLoader.h>
 #include <sp2/updatable.h>
+#include <sp2/stringutil/convert.h>
 #include <json11/json11.hpp>
 
 #include "main.h"

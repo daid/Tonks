@@ -17,7 +17,7 @@ public:
     
     int hp = 15;
 protected:
-    void move(sp::Vector2d amount);
+    void move(const sp::Vector2d& amount);
     void rotate(float amount);
     void fire();
     double getTurretRotation();
