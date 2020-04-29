@@ -20,7 +20,7 @@ static sp::P<PlayerTank> luaGetPlayer(int index)
 }
 
 
-void AIScript::setup(sp::P<sp::ScriptBindingObject> object, sp::string script_name)
+void AIScript::setup(sp::P<sp::script::BindingObject> object, sp::string script_name)
 {
     script.setGlobal("random", sp::random);
     script.setGlobal("irandom", sp::irandom);

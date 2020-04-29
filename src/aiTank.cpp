@@ -52,7 +52,7 @@ double AITank::getTurretRotation()
     return turret->getGlobalRotation2D();
 }
 
-void AITank::onRegisterScriptBindings(sp::ScriptBindingClass& script_binding_class)
+void AITank::onRegisterScriptBindings(sp::script::BindingClass& script_binding_class)
 {
     GameEntity::onRegisterScriptBindings(script_binding_class);
     script_binding_class.bind("move", &AITank::move);

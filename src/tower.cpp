@@ -52,7 +52,7 @@ double Tower::getTurretRotation()
     return turret->getGlobalRotation2D();
 }
 
-void Tower::onRegisterScriptBindings(sp::ScriptBindingClass& script_binding_class)
+void Tower::onRegisterScriptBindings(sp::script::BindingClass& script_binding_class)
 {
     GameEntity::onRegisterScriptBindings(script_binding_class);
     script_binding_class.bind("fire", &Tower::fire);

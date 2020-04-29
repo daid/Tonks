@@ -12,7 +12,7 @@ bool GameEntity::canHurt(sp::P<GameEntity> other)
     return team != other->team;
 }
 
-void GameEntity::onRegisterScriptBindings(sp::ScriptBindingClass& script_binding_class)
+void GameEntity::onRegisterScriptBindings(sp::script::BindingClass& script_binding_class)
 {
     script_binding_class.bind("getPosition", &sp::Node::getPosition2D);
     script_binding_class.bind("getRotation", &sp::Node::getRotation2D);

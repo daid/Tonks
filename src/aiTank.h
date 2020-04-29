@@ -22,7 +22,7 @@ protected:
     void fire();
     double getTurretRotation();
     
-    virtual void onRegisterScriptBindings(sp::ScriptBindingClass& script_binding_class) override;
+    virtual void onRegisterScriptBindings(sp::script::BindingClass& script_binding_class) override;
 private:
     Input input;
     AIScript script;

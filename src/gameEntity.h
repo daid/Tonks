@@ -13,7 +13,7 @@ public:
     
     int team = -1;
     
-    virtual void onRegisterScriptBindings(sp::ScriptBindingClass& script_binding_class) override;
+    virtual void onRegisterScriptBindings(sp::script::BindingClass& script_binding_class) override;
 };
 
 #endif//GAME_ENTITY_H
