@@ -42,6 +42,6 @@ void AIScript::update()
         resource_update_time = sp::io::ResourceProvider::getModifyTime(script_name);
     }
 
-    if (!update_coroutine || !update_coroutine->resume())
-        update_coroutine = script.callCoroutine("update");
+    if (!update_coroutine || !update_coroutine->resume().value())
+        update_coroutine = script.callCoroutine("update").value();
 }
