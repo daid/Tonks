@@ -17,12 +17,12 @@ public:
     
     int hp = 15;
 protected:
-    void move(sp::Vector2d amount);
+    void move(const sp::Vector2d& amount);
     void rotate(float amount);
     void fire();
     double getTurretRotation();
     
-    virtual void onRegisterScriptBindings(sp::ScriptBindingClass& script_binding_class) override;
+    virtual void onRegisterScriptBindings(sp::script::BindingClass& script_binding_class) override;
 private:
     Input input;
     AIScript script;

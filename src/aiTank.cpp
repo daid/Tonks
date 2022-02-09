@@ -32,7 +32,7 @@ void AITank::takeDamage(int amount, sp::P<GameEntity> from)
     }
 }
 
-void AITank::move(sp::Vector2d amount)
+void AITank::move(const sp::Vector2d& amount)
 {
     input.move_request = amount;
 }
@@ -52,7 +52,7 @@ double AITank::getTurretRotation()
     return turret->getGlobalRotation2D();
 }
 
-void AITank::onRegisterScriptBindings(sp::ScriptBindingClass& script_binding_class)
+void AITank::onRegisterScriptBindings(sp::script::BindingClass& script_binding_class)
 {
     GameEntity::onRegisterScriptBindings(script_binding_class);
     script_binding_class.bind("move", &AITank::move);
