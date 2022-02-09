@@ -8,7 +8,7 @@ class Explosion : public sp::Node
 public:
     Explosion(sp::P<sp::Node> parent, sp::Vector2d position);
     
-    virtual void onFixedUpdate();
+    virtual void onFixedUpdate() override;
 private:
     int idx = 0;
 };

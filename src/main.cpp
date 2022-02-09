@@ -21,7 +21,8 @@
 #include <sp2/io/keybinding.h>
 #include <sp2/io/keyValueTreeLoader.h>
 #include <sp2/updatable.h>
-#include <json11/json11.hpp>
+#include <sp2/stringutil/convert.h>
+#include <nlohmann/json.hpp>
 
 #include "main.h"
 #include "aiTank.h"
@@ -199,27 +200,26 @@ public:
         sp::Tilemap* tilemap = new sp::Tilemap(getRoot(), "towerDefense_tilesheet.png", 2.0, 2.0, 19, 12);
         tilemap->render_data.order = RenderOrder::tilemap;
 
-        sp::string err;
-        json11::Json map_json = json11::Json::parse(sp::io::ResourceProvider::get("level/" + name + ".json")->readAll(), err);
-        map_size.x = map_json["width"].int_value();
-        map_size.y = map_json["height"].int_value();
-        for(const auto& layer : map_json["layers"].array_items())
+        auto map_json = nlohmann::json::parse(sp::io::ResourceProvider::get("level/" + name + ".json")->readAll());
+        map_size.x = map_json["width"];
+        map_size.y = map_json["height"];
+        for(const auto& layer : map_json["layers"])
         {
-            if (layer["type"].string_value() == "tilelayer")
+            if (layer["type"] == "tilelayer")
             {
-                const json11::Json& tile_data_json = layer["data"];
+                const auto& tile_data_json = layer["data"];
                 for (int y = 0; y < map_size.y; y++)
                     for (int x = 0; x < map_size.x; x++)
-                        tilemap->setTile(x, y, tile_data_json[x + (map_size.y - 1 - y) * map_size.x].int_value() - 1);
+                        tilemap->setTile(x, y, int(tile_data_json[x + (map_size.y - 1 - y) * map_size.x]) - 1);
             }
-            if (layer["type"].string_value() == "objectgroup")
+            if (layer["type"] == "objectgroup")
             {
-                for(const auto& json_object : layer["objects"].array_items())
+                for(const auto& json_object : layer["objects"])
                 {
                     ObjectInfo info;
-                    info.position = sp::Vector2d(json_object["x"].number_value() / 32.0, map_size.y * 2.0 - json_object["y"].number_value() / 32.0);
-                    info.rotation = sp::stringutil::convert::toFloat(json_object["type"].string_value());
-                    info.name = json_object["name"].string_value();
+                    info.position = sp::Vector2d(double(json_object["x"]) / 32.0, map_size.y * 2.0 - double(json_object["y"]) / 32.0);
+                    info.rotation = sp::stringutil::convert::toFloat(json_object["type"]);
+                    info.name = json_object["name"];
                     objects.push_back(info);
                 }
             }
@@ -261,7 +261,7 @@ public:
         }
     }
 
-    virtual void onUpdate(float delta)
+    virtual void onUpdate(float delta) override
     {
         sp::Vector2d camera_position = getCamera()->getPosition2D();
         camera_position.x = 10.0;
@@ -347,7 +347,7 @@ int main(int argc, char** argv)
 #endif
 
     sp::gui::Theme::loadTheme("default", "gui/theme/basic.theme.txt");
-    new sp::gui::Scene(sp::Vector2d(640, 480), sp::gui::Scene::Direction::Horizontal);
+    new sp::gui::Scene(sp::Vector2d(640, 480));
 
     sp::P<sp::SceneGraphicsLayer> scene_layer = new sp::SceneGraphicsLayer(1);
     scene_layer->addRenderPass(new sp::BasicNodeRenderPass());

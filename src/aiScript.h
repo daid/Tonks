@@ -7,7 +7,7 @@
 class AIScript
 {
 public:
-    void setup(sp::P<sp::ScriptBindingObject> object, sp::string script_name);
+    void setup(sp::P<sp::script::BindingObject> object, sp::string script_name);
     void update();
 private:
     sp::string script_name;

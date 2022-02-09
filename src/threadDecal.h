@@ -8,7 +8,7 @@ class ThreadDecal : public sp::Node
 public:
     ThreadDecal(sp::P<sp::Node> parent, sp::Vector2d position, double rotation);
     
-    virtual void onFixedUpdate();
+    virtual void onFixedUpdate() override;
 private:
     int idx = 0;
 };
