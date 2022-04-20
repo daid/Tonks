@@ -210,7 +210,7 @@ public:
                 const auto& tile_data_json = layer["data"];
                 for (int y = 0; y < map_size.y; y++)
                     for (int x = 0; x < map_size.x; x++)
-                        tilemap->setTile(x, y, int(tile_data_json[x + (map_size.y - 1 - y) * map_size.x]) - 1);
+                        tilemap->setTile({x, y}, int(tile_data_json[x + (map_size.y - 1 - y) * map_size.x]) - 1);
             }
             if (layer["type"] == "objectgroup")
             {
