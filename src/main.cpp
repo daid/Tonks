@@ -356,7 +356,7 @@ int main(int argc, char** argv)
 #endif
     window->addLayer(scene_layer);
 
-    object_config = sp::io::KeyValueTreeLoader::load("objects.txt")->getFlattenNodesByIds();
+    object_config = sp::io::KeyValueTreeLoader::loadResource("objects.txt")->getFlattenNodesByIds();
 
     GameScene* scene = new GameScene();
     scene->loadLevel("1");
